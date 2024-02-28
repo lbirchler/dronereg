@@ -14,7 +14,8 @@ try:
   import requests
   _has_requests = True
 except ImportError:
-  import urllib.request
+  from urllib.request import urlopen
+  from urllib.request import Request
   import urllib.error
   _has_requests = False
 
@@ -22,6 +23,10 @@ except ImportError:
 # ** Database **
 class ReleasableAircraft:
   URL = 'https://registry.faa.gov/database/ReleasableAircraft.zip'
+  HEADERS = {
+      # default requests, urllib, and wget user-agents all blocked
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.3'
+  }
 
   # ardata.pdf - page 1
   REGISTRANT_TYPES = {
@@ -91,14 +96,14 @@ class ReleasableAircraft:
   def download(self):
     if _has_requests:
       try:
-        r = requests.get(self.URL)
+        r = requests.get(self.URL, headers=self.HEADERS)
         return r.content
       except requests.exceptions.RequestException as e:
         print(f'Error downloading database: {e}')
         raise e
     else:
       try:
-        with urllib.request.urlopen(self.URL) as res:
+        with urlopen(Request(url=self.URL, headers=self.HEADERS)) as res:
           return res.read()
       except urllib.error.URLError as e:
         print(f'Error downloading database: {e}')
